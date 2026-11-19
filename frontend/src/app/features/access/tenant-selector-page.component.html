@@ -1,0 +1,36 @@
+<main class="tenant-selector-page" aria-labelledby="tenant-selector-title">
+  <div class="selection-atmosphere" aria-hidden="true"></div>
+  <header class="selection-topbar">
+    <div class="selection-brand"><img src="/brand-veterinaria.svg" alt="" /><span><strong>Arquitectura</strong><small>Veterinaria · Plataforma V1</small></span></div>
+    <a class="selection-admin-link" routerLink="/saas/login"><span aria-hidden="true">⚙</span> Administración SaaS <span aria-hidden="true">↗</span></a>
+  </header>
+  <div class="selection-layout">
+    <section class="selection-intro">
+      <p class="selection-kicker"><span aria-hidden="true"></span> BIENVENIDO A TU PLATAFORMA</p>
+      <h1 id="tenant-selector-title">El cuidado empieza <em>en el lugar correcto.</em></h1>
+      <p class="selection-description">Un espacio pensado para cada veterinaria y cada familia. Selecciona tu sede para gestionar citas, conocer sus productos y acceder a los servicios disponibles.</p>
+      <div class="selection-benefits" aria-label="Beneficios de la plataforma">
+        <div><span aria-hidden="true">01</span><p><strong>Tu veterinaria</strong><small>Cada sede mantiene sus propios datos.</small></p></div>
+        <div><span aria-hidden="true">02</span><p><strong>Todo conectado</strong><small>Mascotas, citas, productos y pedidos.</small></p></div>
+        <div><span aria-hidden="true">03</span><p><strong>Acceso seguro</strong><small>Clientes y equipo con permisos separados.</small></p></div>
+      </div>
+      <p class="selection-smallprint">Arquitectura Veterinaria · Una plataforma, múltiples espacios protegidos.</p>
+    </section>
+    <section class="selection-choices" aria-label="Seleccionar una veterinaria">
+      <div class="selection-section-title"><div><p class="selection-kicker">ELIGE TU SEDE</p><h2>¿A dónde quieres ingresar?</h2></div><span>02 veterinarias</span></div>
+      <div class="tenant-option-grid">
+        @for (tenant of tenants; track tenant.slug) {
+          <article class="tenant-option" [class.access-theme-aurora]="tenant.slug === 'veterinaria-aurora'" [class.access-theme-bosque]="tenant.slug === 'veterinaria-bosque'">
+            <div class="tenant-image-wrap"><img [src]="tenant.imagePath" [alt]="'Imagen representativa de ' + tenant.name" /><span class="tenant-option-overlay" aria-hidden="true"></span><span class="tenant-image-tag">SEDE DISPONIBLE</span></div>
+            <div class="tenant-option-content">
+              <div><span class="tenant-option-kicker">TU ESPACIO VETERINARIO</span><h3 class="tenant-option-name">{{ tenant.name }}</h3><p class="tenant-option-tagline">{{ tenant.tagline }}</p></div>
+              <div class="tenant-option-actions"><a class="tenant-option-action" [routerLink]="['/login', tenant.slug]">Ingresar a la sede <span aria-hidden="true">↗</span></a><a class="tenant-shop-action" [routerLink]="['/tienda', tenant.slug]">Explorar tienda <span aria-hidden="true">→</span></a></div>
+            </div>
+          </article>
+        }
+      </div>
+      <p class="selection-choice-footnote">¿Eres cliente nuevo? Selecciona una sede, elige «Cliente» y crea tu cuenta.</p>
+    </section>
+  </div>
+  <footer class="selection-footer"><span>© Arquitectura Veterinaria · 2026</span><span>Acceso independiente para cada veterinaria</span></footer>
+</main>

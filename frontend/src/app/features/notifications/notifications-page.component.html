@@ -1,0 +1,31 @@
+<main class="notifications-shell" aria-labelledby="notifications-title">
+  <a class="back-link" [routerLink]="backLink()">← Volver al espacio</a>
+  <header>
+    <p class="eyebrow">Actualizaciones de tu cuenta</p>
+    <h1 id="notifications-title">Notificaciones</h1>
+    <p>Solo se muestran avisos asociados a tu cuenta y a la veterinaria de tu sesión.</p>
+  </header>
+  <p class="feedback feedback-error" role="alert" *ngIf="error()">{{ error() }}</p>
+  <p class="loading" *ngIf="loading()">Buscando actualizaciones…</p>
+  <div class="notification-toolbar" *ngIf="!loading()">
+    <span aria-live="polite"><strong>{{ unreadCount() }}</strong> sin leer · {{ items().length }} en total</span>
+    <div class="notification-filters" role="group" aria-label="Filtrar notificaciones">
+      <button class="button button-secondary" [class.is-active]="!onlyUnread()" type="button" (click)="onlyUnread.set(false)" [attr.aria-pressed]="!onlyUnread()">Todas</button>
+      <button class="button button-secondary" [class.is-active]="onlyUnread()" type="button" (click)="onlyUnread.set(true)" [attr.aria-pressed]="onlyUnread()">Sin leer</button>
+    </div>
+  </div>
+  <section class="notification-list" *ngIf="!loading()" aria-label="Notificaciones de tu cuenta">
+    <p class="empty-state" *ngIf="items().length === 0">No tienes notificaciones nuevas o históricas.</p>
+    <p class="empty-state" *ngIf="items().length > 0 && visibleItems().length === 0" role="status">No tienes notificaciones pendientes de lectura.</p>
+    <article class="notification" *ngFor="let item of visibleItems(); trackBy: trackItem" [class.is-read]="item.readAt">
+      <div>
+        <p class="eyebrow">{{ item.sourceModule }} · {{ item.sourceResourceType }}</p>
+        <h2>{{ title(item) }}</h2>
+        <p>{{ detail(item) }}</p>
+        <time>{{ item.createdAt | date:'dd/MM/yyyy, HH:mm':'America/Lima':'es-PE' }}</time>
+      </div>
+      <button class="button button-secondary" type="button" *ngIf="!item.readAt" (click)="markRead(item)">Marcar como leída</button>
+      <span class="read-state" *ngIf="item.readAt">Leída</span>
+    </article>
+  </section>
+</main>

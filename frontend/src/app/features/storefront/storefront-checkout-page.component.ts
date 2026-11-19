@@ -1,0 +1,25 @@
+import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { FormsModule, NgForm } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { finalize, forkJoin, map } from 'rxjs';
+import { OnlineCheckoutOptions, StorefrontCatalog, StorefrontProduct } from '../../core/api/api.models';
+import { OnlineOrderApiService } from '../../core/api/online-order-api.service';
+import { StorefrontApiService } from '../../core/api/storefront-api.service';
+import { NotificationService } from '../../core/notifications/notification.service';
+import { resolveAccessTenant } from '../access/access-tenant';
+import { StorefrontCartLine, StorefrontCartService } from './storefront-cart.service';
+import { validCoordinationPhone, validDeliveryAddress } from './checkout-validation';
+@Component({selector:'app-storefront-checkout-page',imports:[CurrencyPipe,FormsModule,NgFor,NgIf,RouterLink],templateUrl:'./storefront-checkout-page.component.html',styleUrl:'./storefront-checkout-page.component.scss',changeDetection:ChangeDetectionStrategy.OnPush})
+export class StorefrontCheckoutPageComponent {
+  private readonly route=inject(ActivatedRoute); private readonly router=inject(Router); private readonly catalogApi=inject(StorefrontApiService); private readonly orders=inject(OnlineOrderApiService); private readonly cart=inject(StorefrontCartService); private readonly notifications=inject(NotificationService);
+  readonly tenantSlug=signal(this.route.snapshot.paramMap.get('tenantSlug') ?? ''); readonly tenant=computed(()=>resolveAccessTenant(this.tenantSlug())); readonly catalog=signal<StorefrontCatalog|null>(null); readonly lines=signal<StorefrontCartLine[]>([]); readonly options=signal<OnlineCheckoutOptions|null>(null); readonly loading=signal(true); readonly submitting=signal(false); readonly error=signal<string|null>(null); readonly created=signal<number|null>(null);
+  readonly display=computed(()=>{const products=new Map((this.catalog()?.products??[]).map(p=>[p.id,p] as const));return this.lines().flatMap(l=>{const p=products.get(l.productId);return p?[{product:p,quantity:l.quantity,subtotal:p.salePricePen*l.quantity}]:[];});}); readonly subtotal=computed(()=>this.display().reduce((n,x)=>n+x.subtotal,0));
+  readonly draft={deliveryMode:'RECOJO' as 'RECOJO'|'DELIVERY',coordinationPhone:'',deliveryAddress:''};
+  deliveryFee(): number { return this.draft.deliveryMode === 'DELIVERY' ? (this.options()?.fixedDeliveryFeePen ?? 0) : 0; }
+  total(): number { return this.subtotal() + this.deliveryFee(); }
+  constructor(){effect(()=>this.load(this.tenantSlug()));}
+  submit(form:NgForm):void { if(this.submitting())return; if(form.invalid){form.control.markAllAsTouched();this.error.set('Completa los campos requeridos para registrar el pedido.');return;} if(!this.display().length){this.error.set('Tu carrito está vacío. Añade productos antes de registrar un pedido.');return;} if(!validCoordinationPhone(this.draft.coordinationPhone)){this.error.set('Ingresa un teléfono de coordinación válido, con al menos cinco dígitos y sin letras.');return;} if(this.draft.deliveryMode==='DELIVERY'&&!validDeliveryAddress(this.draft.deliveryAddress)){this.error.set('Ingresa una dirección de entrega válida; no puede contener solo espacios.');return;} if(this.draft.deliveryMode==='DELIVERY'&&!this.options()?.deliveryAvailable){this.error.set('Delivery no está disponible para esta veterinaria.');return;} this.error.set(null);this.submitting.set(true);this.orders.create({operationId:crypto.randomUUID(),deliveryMode:this.draft.deliveryMode,coordinationPhone:this.draft.coordinationPhone.trim(),deliveryAddress:this.draft.deliveryMode==='DELIVERY'?this.draft.deliveryAddress.trim():null,expectedDeliveryFeePen:this.draft.deliveryMode==='DELIVERY'?this.deliveryFee():null,lines:this.display().map(x=>({productId:x.product.id,quantity:x.quantity,expectedUnitPricePen:x.product.salePricePen}))}).pipe(finalize(()=>this.submitting.set(false))).subscribe({next:r=>{this.created.set(r.data.orderNumber);this.lines.set(this.cart.clear(this.tenantSlug()));this.notifications.success(`Pedido #${r.data.orderNumber} registrado correctamente.`);},error:e=>this.error.set(e?.error?.error?.message??'No fue posible registrar el pedido. Tus productos siguen en el carrito.')}); }
+  retryLoad(): void { this.load(this.tenantSlug()); }
+  private load(slug:string):void {if(!slug)return;this.loading.set(true);this.error.set(null);forkJoin({catalog:this.catalogApi.loadCatalog(slug),options:this.orders.checkoutOptions()}).subscribe({next:r=>{this.catalog.set(r.catalog.data);this.lines.set(this.cart.reconcile(slug,new Set(r.catalog.data.products.filter(p=>p.available).map(p=>p.id))));this.options.set(r.options.data);this.loading.set(false);},error:()=>{this.error.set('No fue posible preparar el checkout. Verifica tu sesión y vuelve a intentarlo.');this.loading.set(false);}});}
+}

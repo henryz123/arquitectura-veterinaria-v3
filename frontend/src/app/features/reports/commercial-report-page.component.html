@@ -1,0 +1,67 @@
+<div class="report-shell">
+  <a class="skip-link" href="#report-main">Saltar al contenido</a>
+  <header class="report-header">
+    <a class="back-link button-back" routerLink="/workspace">← Espacio de trabajo</a>
+    <div>
+      <p class="eyebrow">INTELIGENCIA / RESULTADOS</p>
+      <h1>Ventas, pedidos y existencias</h1>
+      <p>Consulta hechos reales del tenant: POS, pedidos web y pagos manuales se muestran como fuentes separadas para evitar doble conteo comercial.</p>
+    </div>
+  </header>
+
+  <main id="report-main" *ngIf="canView(); else forbidden">
+    <p class="feedback feedback-error" role="alert" *ngIf="error()">{{ error() }}</p>
+    <section class="panel period-panel" aria-labelledby="period-title">
+      <div><p class="eyebrow">Período local</p><h2 id="period-title">Fechas en America/Lima</h2></div>
+      <form [formGroup]="reportForm" (ngSubmit)="load()" novalidate>
+        <label for="report-from">Desde<input id="report-from" type="date" formControlName="from" required /></label>
+        <label for="report-to">Hasta<input id="report-to" type="date" formControlName="to" required /></label>
+        <button class="button button-primary" type="submit" [disabled]="loading()">{{ loading() ? 'Actualizando…' : 'Consultar informe' }}</button>
+      </form>
+    </section>
+
+    <p class="loading" *ngIf="loading()">Calculando información comercial autorizada…</p>
+
+    <ng-container *ngIf="report() as report">
+      <section class="metric-grid" aria-label="Indicadores comerciales">
+        <article class="metric-card"><span>Ventas POS no anuladas</span><strong>{{ report.posSalesCount }}</strong><small>{{ report.posSalesGrossAmountPen | currency:'PEN':'S/ ':'1.2-2' }} bruto</small></article>
+        <article class="metric-card"><span>Pedidos web confirmados</span><strong>{{ report.onlineConfirmedOrdersCount }}</strong><small>{{ report.onlineConfirmedOrdersGrossAmountPen | currency:'PEN':'S/ ':'1.2-2' }} acordado</small></article>
+        <article class="metric-card"><span>Pagos web validados</span><strong>{{ report.onlineValidatedPaymentsCount }}</strong><small>{{ report.onlineValidatedPaymentsAmountPen | currency:'PEN':'S/ ':'1.2-2' }} registrado</small></article>
+        <article class="metric-card"><span>Anulaciones del período</span><strong>{{ report.cancellationsCount }}</strong><small>Se registran aparte de las ventas</small></article>
+        <article class="metric-card"><span>Devoluciones POS pendientes</span><strong>{{ report.returnsPendingInspectionCount }}</strong><small>{{ report.returnRequestsCount }} solicitudes POS registradas</small></article>
+        <article class="metric-card"><span>Existencias actuales</span><strong>{{ report.availableStockUnits }}</strong><small>{{ report.inventoryProductsCount }} productos inventariables</small></article>
+      </section>
+
+      <section class="panel summary-panel" aria-labelledby="stock-title">
+        <div><p class="eyebrow">Consistencia actual</p><h2 id="stock-title">Stock y ledger</h2></div>
+        <dl class="summary-list">
+          <div><dt>Productos sin stock</dt><dd>{{ report.outOfStockProductsCount }}</dd></div>
+          <div><dt>Devoluciones cerradas</dt><dd>{{ report.returnsClosedCount }}</dd></div>
+          <div><dt>Diferencias saldo / kardex</dt><dd>{{ report.reconciliationMismatchesCount }}</dd></div>
+        </dl>
+        <p class="helper" *ngIf="report.reconciliationMismatchesCount === 0">El saldo actual concilia con los movimientos inmutables registrados.</p>
+        <p class="feedback feedback-error" role="alert" *ngIf="report.reconciliationMismatchesCount > 0">Se detectaron diferencias de conciliación. No se realiza ningún ajuste automático; revísalas desde inventario.</p>
+      </section>
+
+      <section class="data-grid">
+        <section class="panel" aria-labelledby="products-title">
+          <div class="section-heading"><div><p class="eyebrow">Ventas POS</p><h2 id="products-title">Productos más vendidos</h2></div><span>Top 10</span></div>
+          <p class="empty-state" *ngIf="report.topProducts.length === 0">No hay ventas POS no anuladas en el período elegido.</p>
+          <div class="table-wrap" *ngIf="report.topProducts.length">
+            <table><caption class="visually-hidden">Productos POS ordenados por monto bruto</caption><thead><tr><th scope="col">Producto</th><th scope="col">Unidades</th><th scope="col">Monto bruto</th></tr></thead><tbody><tr *ngFor="let product of report.topProducts; trackBy: trackProduct"><td><strong>{{ product.title }}</strong><span>{{ product.sku }}</span></td><td>{{ product.quantitySold }}</td><td>{{ product.grossAmountPen | currency:'PEN':'S/ ':'1.2-2' }}</td></tr></tbody></table>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="movements-title">
+          <div class="section-heading"><div><p class="eyebrow">Kardex por período</p><h2 id="movements-title">Movimientos inmutables</h2></div><span>Sin edición retrospectiva</span></div>
+          <p class="empty-state" *ngIf="report.movements.length === 0">No hay movimientos de inventario en el período elegido.</p>
+          <div class="table-wrap" *ngIf="report.movements.length">
+            <table><caption class="visually-hidden">Movimientos de stock agrupados por tipo</caption><thead><tr><th scope="col">Tipo</th><th scope="col">Operaciones</th><th scope="col">Unidades netas</th></tr></thead><tbody><tr *ngFor="let movement of report.movements; trackBy: trackMovement"><td>{{ movement.movementType }}</td><td>{{ movement.entries }}</td><td>{{ movement.quantityDelta }}</td></tr></tbody></table>
+          </div>
+        </section>
+      </section>
+    </ng-container>
+  </main>
+
+  <ng-template #forbidden><main id="report-main"><p class="feedback feedback-error" role="alert">{{ error() }}</p><a class="button button-secondary" routerLink="/workspace">Volver al espacio de trabajo</a></main></ng-template>
+</div>

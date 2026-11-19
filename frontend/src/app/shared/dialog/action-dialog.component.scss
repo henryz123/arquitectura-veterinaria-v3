@@ -1,0 +1,25 @@
+.av-dialog-backdrop { position:fixed; inset:0; z-index:9000; display:grid; place-items:center; background:rgba(10,30,46,.67); padding:1.2rem; backdrop-filter:blur(4px); }
+.av-dialog-card { width:min(100%,34rem); max-height:min(90dvh,46rem); overflow:auto; padding:clamp(1.4rem,4vw,2rem); background:#fff; color:#18354a; border-radius:1.3rem; border:1px solid #c7d9df; box-shadow:0 30px 85px rgba(6,20,36,.4); }
+.av-dialog-card:focus { outline:none; }
+.av-dialog-heading { display:flex; align-items:center; gap:1rem; }
+.av-dialog-icon { display:grid;place-items:center; width:3rem;height:3rem;flex:none;border-radius:.9rem; background:#d7f5ef; color:#076d68;font-size:1.4rem;font-weight:850; }
+.av-dialog-icon.is-danger { background:#fee5e7;color:#a02535; }
+.av-dialog-kicker {margin:0 0 .2rem;color:#257777;font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em; }
+.av-dialog-heading h2 { margin:0;font-size:clamp(1.2rem,4vw,1.5rem);line-height:1.25; }
+.av-dialog-description { margin:1.1rem 0 1.35rem;color:#475f6f;line-height:1.65; }
+.av-dialog-card label { display:grid;gap:.5rem;font-weight:750; }
+.av-dialog-card textarea,.av-dialog-card input { width:100%;min-height:2.9rem;padding:.7rem .8rem;border:1px solid #a7bfcb;border-radius:.65rem;background:#fff;color:#18354a;font:inherit; }
+.av-dialog-card textarea { resize:vertical;min-height:6rem; }
+.av-dialog-card :is(input,textarea):focus-visible {outline:3px solid #f7ba77;outline-offset:2px;}
+.av-dialog-helper {font-size:.82rem;color:#4f6573;margin:.45rem 0 .8rem;text-align:right;}
+.av-dialog-error { color:#9a2836;font-weight:700;font-size:.88rem; }
+.av-dialog-quantities {display:grid;gap:1rem;}
+.av-dialog-quantities label {grid-template-columns:1fr minmax(6rem,8rem);gap:1rem;align-items:center;}
+.av-dialog-quantities small {display:block;color:#60717d;font-weight:400;}
+.av-dialog-actions {display:flex;justify-content:flex-end;flex-wrap:wrap;gap:.7rem;margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid #e3edf0;}
+.av-dialog-actions button {border-radius:.65rem;min-height:2.8rem;padding:.65rem 1rem;font:inherit;font-weight:750;cursor:pointer;}
+.av-dialog-secondary {border:1px solid #a5bfc9;background:#fff;color:#224b5c;}
+.av-dialog-primary {border:1px solid #087877;background:#087877;color:white;}
+.av-dialog-primary.is-danger {background:#a13342;border-color:#a13342;}
+.av-dialog-primary:disabled {opacity:.5;cursor:not-allowed;}
+@media(max-width:540px){.av-dialog-actions button{flex:1 1 100%;}.av-dialog-quantities label{grid-template-columns:1fr;}}

@@ -1,0 +1,45 @@
+<main class="delivery-settings" aria-labelledby="delivery-settings-title">
+  <a class="button-back" routerLink="/workspace"><span aria-hidden="true">←</span> Volver al panel administrativo</a>
+  <header class="settings-heading">
+    <p class="eyebrow">ADMINISTRACIÓN COMERCIAL / ENTREGA</p>
+    <h1 id="delivery-settings-title">Cada entrega, bajo control.</h1>
+    <p>Define el punto de recojo y las condiciones de reparto de esta veterinaria. Los pedidos existentes conservan las condiciones que ya fueron aceptadas.</p>
+  </header>
+
+  <p class="feedback feedback-error" role="alert" *ngIf="error()">{{ error() }}</p>
+  <p class="loading" aria-live="polite" *ngIf="loading()">Cargando la configuración autorizada…</p>
+
+  <form *ngIf="!loading()" #form="ngForm" (ngSubmit)="save(form)" novalidate>
+    <div class="field-group">
+      <label for="delivery-pickup">Punto de recojo</label>
+      <input id="delivery-pickup" name="pickup" #pickup="ngModel" required minlength="3" maxlength="240"
+        [(ngModel)]="draft.pickupLocation" autocomplete="off" placeholder="Ej.: Recepción, sede principal"
+        [attr.aria-invalid]="pickup.invalid && (pickup.touched || form.submitted) ? 'true' : null" />
+      <small class="field-error" role="alert" *ngIf="pickup.invalid && (pickup.touched || form.submitted)">Indica un punto de recojo de al menos 3 caracteres.</small>
+    </div>
+
+    <label class="check-field" for="delivery-enabled">
+      <input id="delivery-enabled" type="checkbox" name="enabled" [(ngModel)]="draft.deliveryEnabled" />
+      <span>Ofrecer reparto a domicilio en esta veterinaria</span>
+    </label>
+
+    <div class="settings-grid" *ngIf="draft.deliveryEnabled">
+      <div class="field-group">
+        <label for="delivery-fee">Tarifa fija (S/)</label>
+        <input id="delivery-fee" name="fee" type="number" inputmode="decimal" min="0" step="0.01" required
+          #fee="ngModel" [(ngModel)]="draft.fixedDeliveryFeePen"
+          [attr.aria-invalid]="fee.invalid && (fee.touched || form.submitted) ? 'true' : null" />
+        <small class="field-error" role="alert" *ngIf="fee.invalid && (fee.touched || form.submitted)">La tarifa debe ser un importe no negativo, con máximo dos decimales.</small>
+      </div>
+      <div class="field-group">
+        <label for="delivery-coverage">Áreas de cobertura</label>
+        <textarea id="delivery-coverage" name="coverage" #coverage="ngModel" required minlength="3" maxlength="500"
+          [(ngModel)]="draft.coverageDescription" rows="3" placeholder="Describe los distritos o zonas cubiertas"
+          [attr.aria-invalid]="coverage.invalid && (coverage.touched || form.submitted) ? 'true' : null"></textarea>
+        <small class="field-error" role="alert" *ngIf="coverage.invalid && (coverage.touched || form.submitted)">Describe la cobertura con al menos 3 caracteres.</small>
+      </div>
+    </div>
+    <p class="helper">Las tarifas y coberturas nuevas se aplican a pedidos futuros. No se recalculan pedidos ya registrados.</p>
+    <button class="button button-primary" [disabled]="saving()" type="submit">{{ saving() ? 'Guardando configuración…' : 'Guardar configuración' }}</button>
+  </form>
+</main>

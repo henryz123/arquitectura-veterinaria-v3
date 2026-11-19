@@ -1,0 +1,33 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { ApiEnvelope, OnlineCancellationDecisionRequest, OnlineCancellationRequest, OnlineCheckoutOptions, OnlineDeliveryCompletionRequest, OnlineDeliveryConfiguration, OnlineDeliveryConfigurationRequest, OnlineManualPaymentDecisionRequest, OnlineManualPaymentRequest, OnlineOperationRequest, OnlineOrder, OnlineOrderProposalDecisionRequest, OnlineOrderProposalRequest, OnlineOrderRequest, OnlineOrderReturnRequest, OnlineReturnDecisionRequest, OnlineReturnInspectionRequest, OnlineReturnReceiptRequest, OnlineStaffOrder } from './api.models';
+@Injectable({ providedIn: 'root' })
+export class OnlineOrderApiService {
+  private readonly http = inject(HttpClient);
+  checkoutOptions(): Observable<ApiEnvelope<OnlineCheckoutOptions>> { return this.http.get<ApiEnvelope<OnlineCheckoutOptions>>('/api/v1/online-orders/checkout-options'); }
+  create(request: OnlineOrderRequest): Observable<ApiEnvelope<OnlineOrder>> { return this.http.post<ApiEnvelope<OnlineOrder>>('/api/v1/online-orders', request); }
+  listOwn(): Observable<ApiEnvelope<OnlineOrder[]>> { return this.http.get<ApiEnvelope<OnlineOrder[]>>('/api/v1/online-orders'); }
+  listManagement(): Observable<ApiEnvelope<OnlineStaffOrder[]>> { return this.http.get<ApiEnvelope<OnlineStaffOrder[]>>('/api/v1/online-orders/management'); }
+  managementOrder(orderId: string): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.get<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/${orderId}`); }
+  propose(orderId: string, request: OnlineOrderProposalRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/${encodeURIComponent(orderId)}/proposals`, request); }
+  confirm(orderId: string): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/${orderId}/confirmation`, {}); }
+  recordPayment(orderId: string, request: OnlineManualPaymentRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/${encodeURIComponent(orderId)}/payments`, request); }
+  decidePayment(orderId: string, paymentId: string, request: OnlineManualPaymentDecisionRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/${encodeURIComponent(orderId)}/payments/${encodeURIComponent(paymentId)}/decision`, request); }
+  startPreparation(orderId: string, request: OnlineOperationRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/${encodeURIComponent(orderId)}/preparation`, request); }
+  markReadyForPickup(orderId: string, request: OnlineOperationRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/${encodeURIComponent(orderId)}/ready-for-pickup`, request); }
+  markDispatched(orderId: string, request: OnlineOperationRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/${encodeURIComponent(orderId)}/dispatch`, request); }
+  completeDelivery(orderId: string, request: OnlineDeliveryCompletionRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/${encodeURIComponent(orderId)}/delivery`, request); }
+  cancelPending(orderId: string, request: OnlineCancellationRequest): Observable<ApiEnvelope<OnlineOrder>> { return this.http.post<ApiEnvelope<OnlineOrder>>(`/api/v1/online-orders/${encodeURIComponent(orderId)}/cancellation`, request); }
+  requestCancellation(orderId: string, request: OnlineCancellationRequest): Observable<ApiEnvelope<OnlineOrder>> { return this.http.post<ApiEnvelope<OnlineOrder>>(`/api/v1/online-orders/${encodeURIComponent(orderId)}/cancellation-request`, request); }
+  cancelPreDispatch(orderId: string, request: OnlineCancellationRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/${encodeURIComponent(orderId)}/cancellation`, request); }
+  decideCancellation(cancellationId: string, request: OnlineCancellationDecisionRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/cancellations/${encodeURIComponent(cancellationId)}/decision`, request); }
+  requestReturn(orderId: string, request: OnlineOrderReturnRequest): Observable<ApiEnvelope<OnlineOrder>> { return this.http.post<ApiEnvelope<OnlineOrder>>(`/api/v1/online-orders/${encodeURIComponent(orderId)}/returns`, request); }
+  decideReturn(returnId: string, request: OnlineReturnDecisionRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/returns/${encodeURIComponent(returnId)}/decision`, request); }
+  receiveReturn(returnId: string, request: OnlineReturnReceiptRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/returns/${encodeURIComponent(returnId)}/receipt`, request); }
+  inspectReturn(returnId: string, request: OnlineReturnInspectionRequest): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/returns/${encodeURIComponent(returnId)}/inspection`, request); }
+  closeReturn(returnId: string): Observable<ApiEnvelope<OnlineStaffOrder>> { return this.http.post<ApiEnvelope<OnlineStaffOrder>>(`/api/v1/online-orders/management/returns/${encodeURIComponent(returnId)}/closure`, {}); }
+  decideProposal(proposalId: string, request: OnlineOrderProposalDecisionRequest): Observable<ApiEnvelope<OnlineOrder>> { return this.http.post<ApiEnvelope<OnlineOrder>>(`/api/v1/online-orders/proposals/${encodeURIComponent(proposalId)}/decision`, request); }
+  configuration(): Observable<ApiEnvelope<OnlineDeliveryConfiguration | null>> { return this.http.get<ApiEnvelope<OnlineDeliveryConfiguration | null>>('/api/v1/online-orders/delivery-configuration'); }
+  saveConfiguration(request: OnlineDeliveryConfigurationRequest): Observable<ApiEnvelope<OnlineDeliveryConfiguration>> { return this.http.put<ApiEnvelope<OnlineDeliveryConfiguration>>('/api/v1/online-orders/delivery-configuration', request); }
+}

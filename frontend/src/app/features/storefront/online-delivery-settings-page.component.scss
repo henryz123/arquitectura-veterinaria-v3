@@ -1,0 +1,14 @@
+.settings-heading { margin-bottom: 1.5rem; }
+.settings-heading h1 { margin: .25rem 0 .65rem; }
+.settings-heading p:last-child { max-width: 43rem; color: var(--ink-muted); line-height: 1.65; }
+.delivery-settings form { display: grid; gap: 1.25rem; }
+.field-group { display: grid; gap: .45rem; }
+.field-group label { color: var(--ink-strong); font-weight: 750; }
+.field-group input, .field-group textarea { width: 100%; box-sizing: border-box; padding: .7rem .8rem; }
+.check-field { display: flex; align-items: center; gap: .7rem; padding: 1rem; background: var(--surface-base); border: 1px solid var(--border-subtle); border-radius: .8rem; font-weight: 700; }
+.check-field input { flex: 0 0 auto; }
+.settings-grid { display: grid; gap: 1rem; }
+.field-error { margin: 0; color: var(--danger-dark); font-size: .86rem; }
+.helper { margin: 0; color: var(--ink-muted); font-size: .9rem; }
+button[type='submit'] { justify-self: start; }
+@media (max-width: 38rem) { button[type='submit'] { width: 100%; } }

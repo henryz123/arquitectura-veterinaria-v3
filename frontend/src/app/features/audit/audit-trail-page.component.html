@@ -1,0 +1,16 @@
+<main class="audit-shell" aria-labelledby="audit-title">
+  <a class="back-link button-back" routerLink="/workspace">← Espacio de trabajo</a>
+  <header><p class="eyebrow">B06 · Trazabilidad protegida</p><h1 id="audit-title">Auditoría transversal</h1><p>Consulta eventos autorizados de los módulos sin exponer notas clínicas, contraseñas, tokens ni datos de otras veterinarias.</p></header>
+  <ng-container *ngIf="canView(); else forbidden">
+    <p class="feedback feedback-error" role="alert" *ngIf="error()">{{ error() }}</p>
+    <section class="panel" aria-labelledby="filter-title"><h2 id="filter-title">Filtrar eventos</h2><form [formGroup]="filterForm" (ngSubmit)="load(0)" novalidate>
+      <label>Desde<input type="date" formControlName="from" required></label><label>Hasta<input type="date" formControlName="to" required></label>
+      <label>Módulo<select formControlName="module"><option *ngFor="let module of modules" [value]="module">{{ module === 'ALL' ? 'Todos los módulos' : module }}</option></select></label>
+      <label>Operación<input formControlName="action" maxlength="64" placeholder="Ej.: CONFIRMADO"></label>
+      <button class="button button-primary" type="submit" [disabled]="loading()">{{ loading() ? 'Consultando…' : 'Consultar' }}</button>
+    </form></section>
+    <p class="loading" *ngIf="loading()">Consultando solo los registros autorizados…</p>
+    <section class="panel results" *ngIf="!loading()"><p class="empty-state" *ngIf="events().length === 0">No hay eventos autorizados para los filtros elegidos.</p><div class="table-wrap" *ngIf="events().length"><table><caption class="visually-hidden">Eventos de auditoría autorizados</caption><thead><tr><th>Módulo</th><th>Operación</th><th>Entidad</th><th>Fecha</th><th>Autor</th><th>Resultado</th></tr></thead><tbody><tr *ngFor="let event of events(); trackBy: trackEvent"><td><strong>{{ event.sourceModule }}</strong></td><td>{{ eventLabel(event) }}</td><td>{{ event.resourceType }}</td><td>{{ event.occurredAt | date:'dd/MM/yyyy, HH:mm':'America/Lima':'es-PE' }}</td><td>{{ actorLabel(event) }}</td><td>{{ event.outcome || 'Registrado' }}</td></tr></tbody></table></div><nav class="pager" aria-label="Paginación"><button class="button button-secondary" type="button" (click)="load(page() - 1)" [disabled]="loading() || page() === 0">Anterior</button><span>Página {{ page() + 1 }}</span><button class="button button-secondary" type="button" (click)="load(page() + 1)" [disabled]="loading() || !hasMore()">Siguiente</button></nav></section>
+  </ng-container>
+  <ng-template #forbidden><p class="feedback feedback-error" role="alert">{{ error() || 'No tienes acceso a esta auditoría.' }}</p></ng-template>
+</main>

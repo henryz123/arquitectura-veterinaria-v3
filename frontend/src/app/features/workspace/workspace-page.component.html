@@ -1,0 +1,247 @@
+<div class="workspace-shell" *ngIf="tenantSession() as session">
+  <a class="skip-link" href="#workspace-main">Saltar al contenido</a>
+  <aside class="sidebar" aria-label="Navegación administrativa">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"><img src="/brand-veterinaria.svg" alt="" /></span>
+      <div>
+        <strong>Arquitectura</strong>
+        <span>Veterinaria</span>
+      </div>
+    </div>
+    <nav>
+      <div class="sidebar-category">GENERAL</div>
+      <a routerLink="/workspace" fragment="summary" [class.is-active]="activeSection() === 'summary'" [attr.aria-current]="activeSection() === 'summary' ? 'page' : null" (click)="navigateToSection('summary')">Inicio</a>
+      <a routerLink="/care" routerLinkActive="is-active" *ngIf="canUseCare()">Clientes y mascotas</a>
+      <a routerLink="/schedule" routerLinkActive="is-active" *ngIf="canManageSchedule()">Citas y agenda</a>
+      <div class="sidebar-category" *ngIf="canManageStaff() || canUsePos() || canManageOnlineOrders()">OPERACIÓN COMERCIAL</div>
+      <a routerLink="/inventory" routerLinkActive="is-active" *ngIf="canManageStaff()">Productos e inventario</a>
+      <a routerLink="/pos" routerLinkActive="is-active" *ngIf="canUsePos()">Punto de venta</a>
+      <a routerLink="/online-orders/management" routerLinkActive="is-active" *ngIf="canManageOnlineOrders()">Pedidos online</a>
+      <div class="sidebar-category">SEGUIMIENTO</div>
+      <a routerLink="/notifications" routerLinkActive="is-active">Notificaciones</a>
+      <a routerLink="/reports/commercial" routerLinkActive="is-active" *ngIf="canManageStaff()">Informe comercial</a>
+	  <a routerLink="/audit-trail" routerLinkActive="is-active" *ngIf="canManageStaff()">Auditoría</a>
+	  
+      <a routerLink="/grooming" routerLinkActive="is-active" *ngIf="canUseGrooming()">Peluquería y baño</a>
+    </nav>
+    <div class="sidebar-session"><span class="sidebar-session-avatar" aria-hidden="true">AV</span><span><strong>{{ sessionRoleLabel(session.roles) }}</strong><small>{{ tenantCommercialName() }}</small></span><span class="session-live-dot" title="Sesión activa" aria-label="Sesión activa"></span></div>
+    <p class="sidebar-note">Entorno protegido · Cada dato pertenece a tu veterinaria.</p>
+  </aside>
+
+  <div class="workspace-body">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">PLATAFORMA / ESPACIO DE TRABAJO</p>
+        <p class="topbar-title">{{ tenantCommercialName() }}</p>
+      </div>
+      <div class="topbar-actions"><span class="topbar-secure">◉ <span>Sesión protegida</span></span><button class="button button-quiet" type="button" (click)="logout()">Cerrar sesión ↗</button></div>
+    </header>
+
+    <main id="workspace-main" class="workspace-content" aria-labelledby="workspace-title">
+      <div class="page-heading" id="summary">
+        <div>
+          <p class="eyebrow">TU CENTRO DE OPERACIONES</p>
+          <h1 id="workspace-title">Tu veterinaria, bajo control<span class="hero-ending">.</span></h1>
+          <p>Bienvenido a tu espacio de trabajo. Consulta los indicadores de hoy y accede directamente a las tareas que necesita tu equipo.</p>
+          <div class="hero-quick-links"><a routerLink="/schedule" *ngIf="canManageSchedule()">Ver agenda <span aria-hidden="true">↗</span></a><a routerLink="/online-orders/management" *ngIf="canManageOnlineOrders()">Revisar pedidos <span aria-hidden="true">↗</span></a><a routerLink="/care" *ngIf="canUseCare()">Abrir pacientes <span aria-hidden="true">↗</span></a></div>
+        </div>
+        <span class="status-pill" [class.status-ok]="tenantStatus() === 'ACTIVO'">{{ statusLabel(tenantStatus()) }}</span>
+      </div>
+
+      <p class="loading" *ngIf="loading()">Cargando datos autorizados…</p>
+      <p class="feedback feedback-error" role="alert" *ngIf="error()">{{ error() }}</p>
+
+      <section class="summary-grid" *ngIf="profile() as tenant">
+        <article class="summary-card">
+          <p>Veterinaria autorizada</p>
+          <strong>{{ tenant.commercialName }}</strong>
+          <span>Sesión actual</span>
+        </article>
+        <article class="summary-card" *ngIf="canManageStaff()">
+          <p>Equipo activo</p>
+          <strong>{{ activeStaffCount() }}</strong>
+          <span>cuentas laborales activas</span>
+        </article>
+        <article class="summary-card">
+          <p>Rol efectivo</p>
+          <strong>{{ sessionRoleLabel(session.roles) }}</strong>
+          <span>permisos confirmados por el sistema</span>
+        </article>
+      </section>
+
+      <section class="role-panel" *ngIf="!loading()" aria-labelledby="role-panel-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">ACCESOS RÁPIDOS</p>
+            <h2 id="role-panel-title">Herramientas para {{ sessionRoleLabel(session.roles) }}</h2>
+          </div>
+          <span class="panel-caption">{{ tenantCommercialName() }}</span>
+        </div>
+        <p class="panel-note">Todo lo que necesitas para tu jornada, organizado según los permisos de tu cuenta.</p>
+
+        <div class="operational-metrics" *ngIf="operationalMetrics().length > 0">
+          <article class="operational-metric" *ngFor="let metric of operationalMetrics()">
+            <strong>{{ metric.value }}</strong>
+            <span>{{ metric.label }}</span>
+            <small>{{ metric.detail }}</small>
+          </article>
+        </div>
+
+        <div class="agenda-preview" *ngIf="canUseVeterinarianAgenda()">
+          <h3>Mi agenda clínica</h3>
+          <p class="empty-state compact" *ngIf="ownVeterinarianAgenda().length === 0">No tienes citas clínicas vigentes asignadas.</p>
+          <ul *ngIf="ownVeterinarianAgenda().length > 0">
+            <li *ngFor="let item of ownVeterinarianAgenda(); trackBy: trackAgenda">
+              <strong>{{ item.petName }}</strong>
+              <span>{{ item.serviceName }} · {{ formatAgendaDate(item.startsAt) }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="operational-links">
+          <a class="operational-link" *ngFor="let link of operationalLinks()" [routerLink]="link.route" [fragment]="link.fragment ?? undefined">
+            <strong>{{ link.label }}</strong>
+            <span>{{ link.detail }}</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="access-notice" *ngIf="!canManageStaff() && !loading()">
+        <h2>Opciones disponibles para tu cuenta</h2>
+        <p>Esta cuenta no puede gestionar el equipo ni los permisos del personal. Revisa el panel operativo para acceder únicamente a las funciones habilitadas.</p>
+      </section>
+
+      <section class="panel admin-section-switcher" id="management" *ngIf="canManageStaff()" aria-label="Administración interna">
+        <div class="panel-heading"><div><p class="eyebrow">Gestión interna</p><h2>Equipo y administración</h2><p>Invita a tu personal, revisa accesos y consulta los datos de la organización desde un solo lugar.</p></div>
+          <a class="button button-secondary" routerLink="/online-orders/settings">Configurar delivery ↗</a>
+        </div>
+        <nav class="admin-tabs" aria-label="Secciones de administración">
+          <button type="button" [class.is-active]="activeAdminTab() === 'team'" [attr.aria-pressed]="activeAdminTab() === 'team'" (click)="showAdminTab('team')">Equipo y roles <span>{{staff().length}}</span></button>
+          <button type="button" [class.is-active]="activeAdminTab() === 'invitation'" [attr.aria-pressed]="activeAdminTab() === 'invitation'" (click)="showAdminTab('invitation')">Invitar trabajador</button>
+          <button type="button" [class.is-active]="activeAdminTab() === 'organization'" [attr.aria-pressed]="activeAdminTab() === 'organization'" (click)="showAdminTab('organization')">Organización</button>
+        </nav>
+      </section>
+
+      <section class="panel organization-panel" id="organization" *ngIf="profile() as tenant" [hidden]="canManageStaff() && activeAdminTab() !== 'organization'">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Organización</p>
+            <h2>Información de la veterinaria</h2>
+          </div>
+        </div>
+        <dl class="details-list">
+          <div><dt>Nombre comercial</dt><dd>{{ tenant.commercialName }}</dd></div>
+          <div><dt>Sesión</dt><dd>Veterinaria actual</dd></div>
+          <div><dt>Estado</dt><dd>{{ statusLabel(tenant.status) }}</dd></div>
+          <div><dt>Contexto</dt><dd>Una veterinaria por sesión</dd></div>
+        </dl>
+        <p class="panel-note">Esta vista muestra solo la veterinaria de la sesión actual. No permite consultar otras organizaciones.</p>
+      </section>
+
+      <section class="management-grid" *ngIf="canManageStaff() && activeAdminTab() === 'invitation'">
+        <article class="panel" id="invitation">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Alta laboral</p>
+              <h2>Invitar trabajador</h2>
+            </div>
+            <span class="panel-caption">Enlace válido por 24 horas</span>
+          </div>
+          <form [formGroup]="invitationForm" (ngSubmit)="inviteStaff()" novalidate>
+            <div class="field-group">
+              <label for="invite-email">Correo institucional</label>
+              <input id="invite-email" type="email" autocomplete="email" formControlName="email"
+                [attr.aria-invalid]="invitationFieldInvalid(invitationForm.controls.email) ? 'true' : null"
+                [attr.aria-describedby]="invitationFieldInvalid(invitationForm.controls.email) ? 'invite-email-error' : null" />
+              <p class="field-error" id="invite-email-error" role="alert" *ngIf="invitationFieldInvalid(invitationForm.controls.email)">
+                Ingresa un correo válido para la cuenta laboral.
+              </p>
+            </div>
+            <div class="field-group">
+              <label for="invite-roles">Roles iniciales</label>
+              <div id="invite-roles" class="role-picker" role="group" aria-describedby="invite-roles-help">
+                <label *ngFor="let role of roleOptions" class="role-choice">
+                  <input type="checkbox" [checked]="hasInviteRole(role.code)" (change)="toggleInviteRole(role.code, $any($event.target).checked)" />
+                  <span>{{ role.label }}</span>
+                </label>
+              </div>
+              <p id="invite-roles-help" class="helper">Marca uno o varios permisos. Solo los asignados estarán disponibles al aceptar la invitación.</p>
+              <p id="invite-roles-error" class="field-error" role="alert" *ngIf="invitationFieldInvalid(invitationForm.controls.roles)">Selecciona al menos un rol.</p>
+            </div>
+            <button class="button button-primary" type="submit" [disabled]="actionPending()">
+              {{ actionPending() ? 'Registrando invitación…' : 'Registrar invitación' }}
+            </button>
+          </form>
+        </article>
+
+      </section>
+
+      <section class="panel staff-panel" id="team" *ngIf="canManageStaff() && activeAdminTab() === 'team'">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Cuentas laborales</p>
+            <h2>Equipo, roles y estado</h2>
+          </div>
+          <span class="panel-caption">{{ staff().length }} cuentas en este tenant</span>
+        </div>
+        <div class="empty-state" *ngIf="!loading() && staff().length === 0">
+          <h3>No hay cuentas laborales para mostrar</h3>
+          <p>Registra una invitación para comenzar a construir el equipo de esta veterinaria.</p>
+        </div>
+        <div class="table-wrap" *ngIf="staff().length > 0">
+          <table>
+            <caption>Trabajadores del tenant actual</caption>
+            <thead>
+              <tr><th scope="col">Cuenta</th><th scope="col">Roles</th><th scope="col">Estado</th><th scope="col"><span class="visually-hidden">Acciones</span></th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let member of staff(); trackBy: trackStaff">
+                <td><strong>{{ member.email }}</strong><span class="id-hint">ID de cuenta protegido</span></td>
+                <td><span class="role-chip" *ngFor="let role of member.roles">{{ roleLabel(role) }}</span></td>
+                <td><span class="status-pill" [class.status-ok]="member.status === 'ACTIVA'">{{ statusLabel(member.status) }}</span></td>
+                <td class="row-actions">
+                  <button class="button button-secondary" type="button" (click)="editRoles(member)" [disabled]="actionPending()">Editar roles</button>
+                  <button class="button button-danger" type="button" (click)="requestDeactivation(member)" [disabled]="member.status !== 'ACTIVA' || actionPending()">Desactivar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="staff-roles-editor" class="inline-dialog" *ngIf="selectedStaff() as member" aria-labelledby="roles-title">
+        <div>
+          <p class="eyebrow">Cambio de permisos</p>
+          <h2 id="roles-title">Actualizar roles de {{ member.email }}</h2>
+          <p>La validación del último administrador activo se mantiene en el servidor.</p>
+        </div>
+        <form [formGroup]="rolesForm" (ngSubmit)="saveRoles()" novalidate>
+          <label for="edit-roles">Roles efectivos</label>
+          <div id="edit-roles" class="role-picker" role="group" aria-label="Roles efectivos">
+            <label *ngFor="let role of roleOptions" class="role-choice">
+              <input type="checkbox" [checked]="hasStaffRole(role.code)" (change)="toggleStaffRole(role.code, $any($event.target).checked)" />
+              <span>{{ role.label }}</span>
+            </label>
+          </div>
+          <p class="field-error" role="alert" *ngIf="rolesSubmitted() && rolesForm.controls.roles.value.length === 0">Selecciona al menos un rol.</p>
+          <div class="dialog-actions">
+            <button class="button button-primary" type="submit" [disabled]="actionPending()">Guardar roles</button>
+            <button class="button button-quiet" type="button" (click)="cancelRoleEdit()" [disabled]="actionPending()">Cancelar</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="inline-dialog danger-dialog" *ngIf="pendingDeactivation() as member" aria-labelledby="deactivation-title">
+        <div>
+          <p class="eyebrow">Acción sensible</p>
+          <h2 id="deactivation-title">¿Desactivar {{ member.email }}?</h2>
+          <p>El servidor revocará los accesos afectados y rechazará la operación si fuese el último administrador activo.</p>
+        </div>
+        <div class="dialog-actions">
+          <button class="button button-danger" type="button" (click)="confirmDeactivation()" [disabled]="actionPending()">Confirmar desactivación</button>
+          <button class="button button-quiet" type="button" (click)="cancelDeactivation()" [disabled]="actionPending()">Conservar cuenta</button>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,106 @@
+<a class="skip-link" href="#storefront-content">Ir al catálogo</a>
+<main class="storefront-shell" [class.access-theme-bosque]="tenant().slug === 'veterinaria-bosque'" aria-labelledby="storefront-title">
+  <header class="storefront-header">
+    <div>
+      <p class="eyebrow">Tienda online</p>
+      <h1 id="storefront-title">El rincón favorito de tu mascota <span>↗</span></h1><p class="storefront-brand-tenant">{{ tenant().name }}</p>
+      <p>{{ tenant().tagline }}</p>
+    </div>
+    <nav aria-label="Navegación de tienda"><span class="store-nav-label">NAVEGACIÓN</span>
+      <a class="store-return-link" *ngIf="returnToClient()" routerLink="/client-space">← Volver a mi espacio</a>
+      <a class="store-return-link" *ngIf="returnToStaff()" routerLink="/workspace">← Volver al panel</a>
+      <a routerLink="/seleccionar-veterinaria">Cambiar veterinaria</a>
+      <a [routerLink]="['/client/login', tenantSlug()]">Acceso cliente</a>
+      <a [routerLink]="['/login', tenantSlug()]">Acceso personal</a>
+    </nav>
+  </header>
+
+  <p class="feedback feedback-error" role="alert" *ngIf="error()">{{ error() }}</p>
+
+  <section id="storefront-content" class="storefront-content" *ngIf="catalog() as currentCatalog">
+    <div class="catalog-heading">
+      <div>
+        <p class="eyebrow">Productos físicos publicados</p>
+        <h2>Productos para el bienestar de tu mascota</h2>
+        <p>La disponibilidad se confirma nuevamente al crear un pedido. Tu carrito no reserva existencias.</p>
+      </div>
+      <p class="cart-summary" aria-live="polite">{{ cartQuantity() }} {{ cartQuantity() === 1 ? 'producto' : 'productos' }} en carrito</p>
+    </div>
+
+    <div class="storefront-filters" *ngIf="!loading()">
+      <label class="store-filter-search"><span>Buscar productos</span><input type="search" aria-label="Buscar en el catálogo" placeholder="Buscar alimentos, juguetes, accesorios…" [value]="catalogSearch()" (input)="catalogSearch.set($any($event.target).value)" /></label>
+      <label class="store-filter-order"><span>Ordenar por</span><select aria-label="Ordenar productos" [value]="catalogSort()" (change)="setSort($any($event.target).value)"><option value="RELEVANCIA">Destacados</option><option value="PRECIO_ASC">Menor precio</option><option value="PRECIO_DESC">Mayor precio</option></select></label>
+      <label class="store-filter-available"><input type="checkbox" [checked]="availableOnly()" (change)="availableOnly.set($any($event.target).checked)" /><span>Solo disponibles</span></label>
+      <span class="store-filter-count">{{ visibleProducts().length }} resultados</span>
+    </div>
+    <p class="loading" aria-live="polite" *ngIf="loading()">Cargando productos publicados...</p>
+
+    <div class="storefront-layout" *ngIf="!loading()">
+      <section aria-label="Catálogo publicado">
+        <div class="product-grid" *ngIf="currentCatalog.products.length; else emptyCatalog">
+          <article class="product-card" *ngFor="let product of visibleProducts()" [attr.data-storefront-product-id]="product.id">
+            <div class="product-image" [class.product-image-empty]="!product.imageUrl">
+              <img *ngIf="product.imageUrl" [src]="product.imageUrl" [alt]="product.title" />
+              <span *ngIf="!product.imageUrl" class="product-placeholder-art" aria-hidden="true"><span>✦</span><span>AV</span><small>Cuidado &amp; bienestar</small></span>
+            </div>
+            <div class="product-card-body">
+              <p class="product-category" *ngIf="product.categoryName">{{ product.categoryName }}</p>
+              <h3>{{ product.title }}</h3>
+              <p class="product-description">{{ product.description || 'Producto disponible en el catálogo de esta veterinaria.' }}</p>
+              <div class="product-meta">
+                <strong>{{ product.salePricePen | currency:'PEN':'S/ ':'1.2-2' }}</strong>
+                <span class="availability" [class.unavailable]="!product.available">{{ product.available ? 'Disponible' : 'Sin disponibilidad' }}</span>
+              </div>
+              <button type="button" (click)="addToCart(product)" [disabled]="!product.available">Añadir al carrito</button>
+            </div>
+          </article>
+        </div>
+        <section class="store-no-results" *ngIf="currentCatalog.products.length && visibleProducts().length === 0" aria-live="polite">
+          <h3>No encontramos productos con esos filtros</h3>
+          <p>Prueba otra búsqueda o consulta todos los productos publicados por la veterinaria.</p>
+          <button type="button" (click)="clearCatalogFilters()">Mostrar todos los productos</button>
+        </section>
+        <ng-template #emptyCatalog>
+          <section class="empty-state">
+            <h3>No hay productos publicados por el momento</h3>
+            <p>Cuando esta veterinaria publique productos físicos, aparecerán aquí.</p>
+          </section>
+        </ng-template>
+      </section>
+
+      <aside class="cart-panel" aria-labelledby="cart-title">
+        <div class="cart-heading">
+          <div>
+            <p class="eyebrow">Carrito local</p>
+            <h2 id="cart-title">Tu carrito</h2>
+          </div>
+          <span>{{ cartQuantity() }}</span>
+        </div>
+        <p class="feedback feedback-success" aria-live="polite" *ngIf="cartNotice()">{{ cartNotice() }}</p>
+        <div class="cart-lines" *ngIf="displayLines().length; else emptyCart">
+          <article *ngFor="let line of displayLines()">
+            <div>
+              <strong>{{ line.product.title }}</strong>
+              <span>{{ line.product.salePricePen | currency:'PEN':'S/ ':'1.2-2' }} c/u</span>
+            </div>
+            <label>
+              <span class="visually-hidden">Cantidad de {{ line.product.title }}</span>
+              <input #quantity type="number" min="1" max="99" step="1" [value]="line.quantity" (change)="updateQuantity(line.product.id, quantity.value)" />
+            </label>
+            <strong>{{ line.subtotal | currency:'PEN':'S/ ':'1.2-2' }}</strong>
+            <button type="button" class="remove-line" (click)="removeFromCart(line.product.id)">Retirar</button>
+          </article>
+        </div>
+        <ng-template #emptyCart>
+          <p class="empty-cart">Añade productos disponibles. Este carrito queda guardado solo para {{ tenant().name }} en este navegador.</p>
+        </ng-template>
+        <div class="cart-total">
+          <span>Total provisional</span>
+          <strong>{{ cartTotal() | currency:'PEN':'S/ ':'1.2-2' }}</strong>
+        </div>
+        <p class="cart-note"><span aria-hidden="true">◈</span> Precios provisionales. El stock se confirma al registrar tu pedido.</p>
+        <a *ngIf="displayLines().length" class="storefront-checkout button-checkout" [routerLink]="['/tienda', tenantSlug(), 'checkout']"><span>Finalizar mi compra</span> <span aria-hidden="true">→</span></a>
+      </aside>
+    </div>
+  </section>
+</main>
